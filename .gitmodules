@@ -1,0 +1,3 @@
+[submodule "src/xc3sprog"]
+	path = src/xc3sprog
+	url = git@github.com:sifive/xc3sprog.git
