@@ -4,7 +4,7 @@ include scripts/Freedom.mk
 # Include version identifiers to build up the full version string
 include Version.mk
 PACKAGE_HEADING := freedom-xc3sprog
-PACKAGE_VERSION := $(XC3SPROG_VERSION)-$(FREEDOM_XC3SPROG_CODELINE)$(FREEDOM_XC3SPROG_GENERATION)b$(FREEDOM_XC3SPROG_BUILD)
+PACKAGE_VERSION := $(XC3SPROG_VERSION)-$(FREEDOM_XC3SPROG_ID)
 
 # Source code directory references
 SRCNAME_XC3SPROG := xc3sprog
@@ -57,21 +57,24 @@ $(OBJ_WIN32)/build/$(PACKAGE_HEADING)/libs.stamp: \
 $(OBJDIR)/%/build/$(PACKAGE_HEADING)/source.stamp:
 	$(eval $@_TARGET := $(patsubst $(OBJDIR)/%/build/$(PACKAGE_HEADING)/source.stamp,%,$@))
 	$(eval $@_INSTALL := $(patsubst %/build/$(PACKAGE_HEADING)/source.stamp,%/install/$(PACKAGE_HEADING)-$(PACKAGE_VERSION)-$($@_TARGET),$@))
+	$(eval $@_REC := $(abspath $(patsubst %/build/$(PACKAGE_HEADING)/source.stamp,%/rec/$(PACKAGE_HEADING),$@)))
 	rm -rf $($@_INSTALL)
 	mkdir -p $($@_INSTALL)
+	rm -rf $($@_REC)
+	mkdir -p $($@_REC)
 	rm -rf $(dir $@)
 	mkdir -p $(dir $@)
-	cd $(dir $@); curl -L -f -s -o libusb-1.0.22.tar.bz2 https://github.com/libusb/libusb/releases/download/v1.0.22/libusb-1.0.22.tar.bz2
-	cd $(dir $@); $(TAR) -xf libusb-1.0.22.tar.bz2
+	cd $($@_REC); curl -L -f -s -o libusb-1.0.22.tar.bz2 https://github.com/libusb/libusb/releases/download/v1.0.22/libusb-1.0.22.tar.bz2
+	cd $(dir $@); $(TAR) -xf $($@_REC)/libusb-1.0.22.tar.bz2
 	cd $(dir $@); mv libusb-1.0.22 libusb
-	cd $(dir $@); curl -L -f -s -o libusb-compat-0.1.7.tar.bz2 https://github.com/libusb/libusb-compat-0.1/releases/download/v0.1.7/libusb-compat-0.1.7.tar.bz2
-	cd $(dir $@); $(TAR) -xf libusb-compat-0.1.7.tar.bz2
+	cd $($@_REC); curl -L -f -s -o libusb-compat-0.1.7.tar.bz2 https://github.com/libusb/libusb-compat-0.1/releases/download/v0.1.7/libusb-compat-0.1.7.tar.bz2
+	cd $(dir $@); $(TAR) -xf $($@_REC)/libusb-compat-0.1.7.tar.bz2
 	cd $(dir $@); mv libusb-compat-0.1.7 libusb-compat
-	cd $(dir $@); curl -L -f -s -o libftdi1-1.4.tar.bz2 https://www.intra2net.com/en/developer/libftdi/download/libftdi1-1.4.tar.bz2
-	cd $(dir $@); $(TAR) -xf libftdi1-1.4.tar.bz2
+	cd $($@_REC); curl -L -f -s -o libftdi1-1.4.tar.bz2 https://www.intra2net.com/en/developer/libftdi/download/libftdi1-1.4.tar.bz2
+	cd $(dir $@); $(TAR) -xf $($@_REC)/libftdi1-1.4.tar.bz2
 	cd $(dir $@); mv libftdi1-1.4 libftdi
-	cd $(dir $@); curl -L -f -s -o libiconv-1.15.tar.gz https://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.15.tar.gz
-	cd $(dir $@); $(TAR) -xf libiconv-1.15.tar.gz
+	cd $($@_REC); curl -L -f -s -o libiconv-1.15.tar.gz https://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.15.tar.gz
+	cd $(dir $@); $(TAR) -xf $($@_REC)/libiconv-1.15.tar.gz
 	cd $(dir $@); mv libiconv-1.15 libiconv
 	cp -a $(SRCPATH_XC3SPROG) $(dir $@)
 	$(SED) -i -f $(PATCHESDIR)/xc3sprog.sed -e "s/SIFIVE_PACKAGE_VERSION/SiFive XC3SPROG $(PACKAGE_VERSION)/" $(dir $@)/$(SRCNAME_XC3SPROG)/xc3sprog.cpp
@@ -84,13 +87,14 @@ $(OBJDIR)/%/build/$(PACKAGE_HEADING)/libusb/build.stamp: \
 		$(OBJDIR)/%/build/$(PACKAGE_HEADING)/source.stamp
 	$(eval $@_TARGET := $(patsubst $(OBJDIR)/%/build/$(PACKAGE_HEADING)/libusb/build.stamp,%,$@))
 	$(eval $@_INSTALL := $(patsubst %/build/$(PACKAGE_HEADING)/libusb/build.stamp,%/install/$(PACKAGE_HEADING)-$(PACKAGE_VERSION)-$($@_TARGET),$@))
+	$(eval $@_REC := $(abspath $(patsubst %/build/$(PACKAGE_HEADING)/libusb/build.stamp,%/rec/$(PACKAGE_HEADING),$@)))
 	cd $(dir $@) && ./configure \
 		$($($@_TARGET)-xc3sp-host) \
 		--prefix=$(abspath $($@_INSTALL)) \
 		--disable-udev \
-		--enable-static &>make-configure.log
-	$(MAKE) -C $(dir $@) &>$(dir $@)/make-build.log
-	$(MAKE) -C $(dir $@) -j1 install &>$(dir $@)/make-install.log
+		--enable-static &>$($@_REC)/libusb-make-configure.log
+	$(MAKE) -C $(dir $@) &>$($@_REC)/libusb-make-build.log
+	$(MAKE) -C $(dir $@) -j1 install &>$($@_REC)/libusb-make-install.log
 	date > $@
 
 $(OBJDIR)/%/build/$(PACKAGE_HEADING)/libusb-compat/build.stamp: \
@@ -98,12 +102,13 @@ $(OBJDIR)/%/build/$(PACKAGE_HEADING)/libusb-compat/build.stamp: \
 		$(OBJDIR)/%/build/$(PACKAGE_HEADING)/source.stamp
 	$(eval $@_TARGET := $(patsubst $(OBJDIR)/%/build/$(PACKAGE_HEADING)/libusb-compat/build.stamp,%,$@))
 	$(eval $@_INSTALL := $(patsubst %/build/$(PACKAGE_HEADING)/libusb-compat/build.stamp,%/install/$(PACKAGE_HEADING)-$(PACKAGE_VERSION)-$($@_TARGET),$@))
+	$(eval $@_REC := $(abspath $(patsubst %/build/$(PACKAGE_HEADING)/libusb-compat/build.stamp,%/rec/$(PACKAGE_HEADING),$@)))
 	cd $(dir $@) && $($($@_TARGET)-xdeps-vars) ./configure \
 		$($($@_TARGET)-xc3sp-host) \
 		--prefix=$(abspath $($@_INSTALL)) \
-		--enable-static &>make-configure.log
-	$(MAKE) -C $(dir $@) &>$(dir $@)/make-build.log
-	$(MAKE) -C $(dir $@) -j1 install &>$(dir $@)/make-install.log
+		--enable-static &>$($@_REC)/libusb-compat-make-configure.log
+	$(MAKE) -C $(dir $@) &>$($@_REC)/libusb-compat-make-build.log
+	$(MAKE) -C $(dir $@) -j1 install &>$($@_REC)/libusb-compat-make-install.log
 	date > $@
 
 $(OBJDIR)/%/build/$(PACKAGE_HEADING)/libftdi/build.stamp: \
@@ -111,23 +116,25 @@ $(OBJDIR)/%/build/$(PACKAGE_HEADING)/libftdi/build.stamp: \
 		$(OBJDIR)/%/build/$(PACKAGE_HEADING)/source.stamp
 	$(eval $@_TARGET := $(patsubst $(OBJDIR)/%/build/$(PACKAGE_HEADING)/libftdi/build.stamp,%,$@))
 	$(eval $@_INSTALL := $(patsubst %/build/$(PACKAGE_HEADING)/libftdi/build.stamp,%/install/$(PACKAGE_HEADING)-$(PACKAGE_VERSION)-$($@_TARGET),$@))
+	$(eval $@_REC := $(abspath $(patsubst %/build/$(PACKAGE_HEADING)/libftdi/build.stamp,%/rec/$(PACKAGE_HEADING),$@)))
 	cd $(dir $@) && $($($@_TARGET)-xdeps-vars) cmake \
 		-DCMAKE_INSTALL_PREFIX:PATH=$(abspath $($@_INSTALL)) \
-		$($($@_TARGET)-xftdi-configure) . &>make-cmake.log
-	$(MAKE) -C $(dir $@) &>$(dir $@)/make-build.log
-	$(MAKE) -C $(dir $@) -j1 install &>$(dir $@)/make-install.log
+		$($($@_TARGET)-xftdi-configure) . &>$($@_REC)/libftdi-make-cmake.log
+	$(MAKE) -C $(dir $@) &>$($@_REC)/libftdi-make-build.log
+	$(MAKE) -C $(dir $@) -j1 install &>$($@_REC)/libftdi-make-install.log
 	date > $@
 
 $(OBJDIR)/%/build/$(PACKAGE_HEADING)/libiconv/build.stamp: \
 		$(OBJDIR)/%/build/$(PACKAGE_HEADING)/source.stamp
 	$(eval $@_TARGET := $(patsubst $(OBJDIR)/%/build/$(PACKAGE_HEADING)/libiconv/build.stamp,%,$@))
 	$(eval $@_INSTALL := $(patsubst %/build/$(PACKAGE_HEADING)/libiconv/build.stamp,%/install/$(PACKAGE_HEADING)-$(PACKAGE_VERSION)-$($@_TARGET),$@))
+	$(eval $@_REC := $(abspath $(patsubst %/build/$(PACKAGE_HEADING)/libiconv/build.stamp,%/rec/$(PACKAGE_HEADING),$@)))
 	cd $(dir $@) && ./configure \
 		$($($@_TARGET)-xc3sp-host) \
 		--prefix=$(abspath $($@_INSTALL)) \
-		--enable-static &>make-configure.log
-	$(MAKE) -C $(dir $@) &>$(dir $@)/make-build.log
-	$(MAKE) -C $(dir $@) -j1 install &>$(dir $@)/make-install.log
+		--enable-static &>$($@_REC)/libiconv-make-configure.log
+	$(MAKE) -C $(dir $@) &>$($@_REC)/libiconv-make-build.log
+	$(MAKE) -C $(dir $@) -j1 install &>$($@_REC)/libiconv-make-install.log
 	date > $@
 
 $(OBJDIR)/%/build/$(PACKAGE_HEADING)/$(SRCNAME_XC3SPROG)/build.stamp: \
@@ -136,6 +143,7 @@ $(OBJDIR)/%/build/$(PACKAGE_HEADING)/$(SRCNAME_XC3SPROG)/build.stamp: \
 		$(OBJDIR)/%/build/$(PACKAGE_HEADING)/source.stamp
 	$(eval $@_TARGET := $(patsubst $(OBJDIR)/%/build/$(PACKAGE_HEADING)/$(SRCNAME_XC3SPROG)/build.stamp,%,$@))
 	$(eval $@_INSTALL := $(patsubst %/build/$(PACKAGE_HEADING)/$(SRCNAME_XC3SPROG)/build.stamp,%/install/$(PACKAGE_HEADING)-$(PACKAGE_VERSION)-$($@_TARGET),$@))
+	$(eval $@_REC := $(abspath $(patsubst %/build/$(PACKAGE_HEADING)/$(SRCNAME_XC3SPROG)/build.stamp,%/rec/$(PACKAGE_HEADING),$@)))
 	rm -f $(abspath $($@_INSTALL))/lib/lib*.dylib*
 	rm -f $(abspath $($@_INSTALL))/lib/lib*.so*
 	rm -f $(abspath $($@_INSTALL))/lib64/lib*.so*
@@ -145,9 +153,9 @@ $(OBJDIR)/%/build/$(PACKAGE_HEADING)/$(SRCNAME_XC3SPROG)/build.stamp: \
 		-DLIBUSB_INCLUDE_DIRS=$(abspath $($@_INSTALL))/include \
 		-DLIBFTDI_LIBRARIES=ftdi1 \
 		$($($@_TARGET)-xc3sp-configure) \
-		. &>make-cmake.log
-	$(MAKE) -C $(dir $@) &>$(dir $@)/make-build.log
-	$(MAKE) -C $(dir $@) -j1 install &>$(dir $@)/make-install.log
+		. &>$($@_REC)/$(SRCNAME_XC3SPROG)-make-cmake.log
+	$(MAKE) -C $(dir $@) &>$($@_REC)/$(SRCNAME_XC3SPROG)-make-build.log
+	$(MAKE) -C $(dir $@) -j1 install &>$($@_REC)/$(SRCNAME_XC3SPROG)-make-install.log
 	rm -f $(abspath $($@_INSTALL))/bin/iconv
 	rm -f $(abspath $($@_INSTALL))/bin/iconv.exe
 	rm -rf $(abspath $($@_INSTALL))/share
