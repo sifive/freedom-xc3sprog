@@ -4,7 +4,7 @@ include scripts/Freedom.mk
 # Include version identifiers to build up the full version string
 include Version.mk
 PACKAGE_HEADING := freedom-xc3sprog
-PACKAGE_VERSION := $(XC3SPROG_VERSION)-$(FREEDOM_XC3SPROG_ID)
+PACKAGE_VERSION := $(XC3SPROG_VERSION)-$(FREEDOM_XC3SPROG_ID)$(EXTRA_SUFFIX)
 
 # Source code directory references
 SRCNAME_XC3SPROG := xc3sprog
@@ -32,7 +32,11 @@ include scripts/Package.mk
 
 $(OBJDIR)/%/build/$(PACKAGE_HEADING)/install.stamp: \
 		$(OBJDIR)/%/build/$(PACKAGE_HEADING)/$(SRCNAME_XC3SPROG)/build.stamp
+	$(eval $@_TARGET := $(patsubst $(OBJDIR)/%/build/$(PACKAGE_HEADING)/install.stamp,%,$@))
+	$(eval $@_INSTALL := $(patsubst %/build/$(PACKAGE_HEADING)/install.stamp,%/install/$(PACKAGE_HEADING)-$(PACKAGE_VERSION)-$($@_TARGET),$@))
 	mkdir -p $(dir $@)
+	git log > $(abspath $($@_INSTALL))/$(PACKAGE_HEADING)-$(PACKAGE_VERSION)-$($@_TARGET).commitlog
+	cp README.md $(abspath $($@_INSTALL))/$(PACKAGE_HEADING)-$(PACKAGE_VERSION)-$($@_TARGET).readme.md
 	date > $@
 
 # We might need some extra target libraries for this package
@@ -160,4 +164,12 @@ $(OBJDIR)/%/build/$(PACKAGE_HEADING)/$(SRCNAME_XC3SPROG)/build.stamp: \
 	rm -f $(abspath $($@_INSTALL))/bin/iconv.exe
 	rm -rf $(abspath $($@_INSTALL))/share
 	cp -R $(dir $@)/share $(abspath $($@_INSTALL))
+	date > $@
+
+$(OBJDIR)/$(NATIVE)/test/$(PACKAGE_HEADING)/test.stamp: \
+		$(OBJDIR)/$(NATIVE)/test/$(PACKAGE_HEADING)/launch.stamp
+	mkdir -p $(dir $@)
+#	PATH=$(abspath $(OBJDIR)/$(NATIVE)/launch/$(PACKAGE_TARNAME)/bin):$(PATH) xc3sprog -h
+	@echo "xc3sprog executable cannot be run with a -v option without failing!"
+	@echo "Finished testing $(PACKAGE_HEADING)-$(PACKAGE_VERSION)-$(NATIVE).tar.gz tarball"
 	date > $@
